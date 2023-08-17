@@ -1,0 +1,155 @@
+package com.anibalcopitan.okeypay2
+
+import android.app.Dialog
+import android.content.Context
+import android.provider.Settings.Global.getString
+import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.res.TypedArrayUtils.getString
+
+import com.anibalcopitan.okeypay2.ui.theme.Shapes
+import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
+import androidx.compose.ui.window.Dialog as Dialog1
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun LoginScreenScreenPreview() {
+    OkeyPay2Theme {
+        LoginScreen(LocalContext.current)
+    }
+}
+
+@Composable
+fun LoginScreen(mContext: Context) {
+    val openDialog = remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        HeaderText()
+        Spacer(modifier = Modifier.height(28.dp))
+        PhoneNumberTextField()
+        Spacer(modifier = Modifier.height(4.dp))
+        PasswordTextField()
+        Spacer(modifier = Modifier.height(64.dp))
+        ButtonLogin(mContext)
+        Spacer(modifier = Modifier.height(16.dp))
+        ButtonToRegister { openDialog.value = true }
+    }
+
+    // Open Modal
+    if (openDialog.value) {
+        Dialog(onDismissRequest = { openDialog.value = false }) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                color = MaterialTheme.colorScheme.background,
+                shape = RoundedCornerShape(size = 0.dp)
+            ){
+                RegisterScreen(mContext)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderText() {
+    Text(text = stringResource(id = R.string.app_name), fontWeight = FontWeight.Bold, fontSize = 32.sp)
+    Spacer(modifier = Modifier.height(2.dp))
+    Text(text = "Inicia sesión para continuar", fontWeight = FontWeight.Bold, fontSize = 26.sp, color = Color.LightGray)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhoneNumberTextField() {
+    var phoneNumber by remember { mutableStateOf("") }
+
+    OutlinedTextField(
+        value = phoneNumber,
+        onValueChange = { phoneNumber = it },
+        label = { Text(text = "Celular") },
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PasswordTextField() {
+    var password by remember { mutableStateOf("") }
+
+    OutlinedTextField(
+        value = password,
+        onValueChange = { password = it },
+        label = { Text(text = "Contraseña") },
+        modifier = Modifier.fillMaxWidth(),
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
+    )
+}
+
+@Composable
+private fun ButtonLogin(mContext : Context) {
+    Button(
+        onClick = {
+            Toast.makeText(mContext, "login success", Toast.LENGTH_SHORT).show()
+        },
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 1.dp),
+        shape = Shapes.large
+    ) {
+        Text("INICIAR SESIÓN")
+    }
+
+    fun showToast(context: Context, message: String) {
+
+    }
+}
+
+@Composable
+private fun ButtonToRegister(onClick: () -> Unit) {
+    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+        Text("¿No tienes una cuenta? ")
+        Text("Regístrate ",
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onClick)
+        )
+    }
+}
