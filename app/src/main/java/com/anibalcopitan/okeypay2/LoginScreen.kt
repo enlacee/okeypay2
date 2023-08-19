@@ -73,9 +73,9 @@ fun LoginScreen(mContext: Context) {
         OutlinedTextField(
             value = credentials.login,
             onValueChange = { data -> credentials = credentials.copy(login = data) },
-            label = { Text(text = "Celular") },
+            label = { Text(text = "Correo") },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
@@ -95,13 +95,13 @@ fun LoginScreen(mContext: Context) {
             ),
         )
         //
-        Spacer(modifier = Modifier.height(64.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         ButtonLogin(mContext) {
             if (!checkCredentials(credentials, context)) {
                 credentials = Credentials()
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(44.dp))
         ButtonToRegister { openDialog.value = true }
     }
 
@@ -122,7 +122,7 @@ fun LoginScreen(mContext: Context) {
 }
 
 fun checkCredentials(creds: Credentials, context: Context): Boolean {
-    if (creds.isNotEmpty() && creds.login == "123" && creds.pwd == "123") {
+    if (creds.isNotEmpty() && creds.login == "micorreo@example.com" && creds.pwd == "123") {
         context.startActivity(Intent(context, DashboardActivity::class.java))
         (context as Activity).finish()
         return true
@@ -133,7 +133,7 @@ fun checkCredentials(creds: Credentials, context: Context): Boolean {
 }
 
 data class Credentials(
-    var login: String = "123",
+    var login: String = "micorreo@example.com",
     var pwd: String = "123",
 ) {
     fun isNotEmpty(): Boolean {

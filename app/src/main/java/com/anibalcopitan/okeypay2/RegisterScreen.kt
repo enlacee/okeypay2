@@ -53,8 +53,6 @@ fun RegisterScreen(mContext: Context) {
         Spacer(modifier = Modifier.height(4.dp))
         EmailTextField()
         Spacer(modifier = Modifier.height(4.dp))
-        PhoneNumberTextField()
-        Spacer(modifier = Modifier.height(4.dp))
         PasswordTextField()
         Spacer(modifier = Modifier.height(24.dp))
         ButtonRegister(onClick = {
@@ -78,23 +76,9 @@ private fun UsernameTextField() {
     OutlinedTextField(
         value = username,
         onValueChange = { username = it },
-        label = { Text(text = "Nombres") },
+        label = { Text(text = "Nombre") },
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PhoneNumberTextField() {
-    var phoneNumber by remember { mutableStateOf("") }
-
-    OutlinedTextField(
-        value = phoneNumber,
-        onValueChange = { phoneNumber = it },
-        label = { Text(text = "Celular") },
-        modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
 }
 
