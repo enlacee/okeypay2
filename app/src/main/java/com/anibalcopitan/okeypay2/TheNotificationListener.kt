@@ -2,11 +2,39 @@ package com.anibalcopitan.okeypay2
 
 import android.app.Notification
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 
 class TheNotificationListener : NotificationListenerService() {
+    private val broadcastReceiver = MyReceiverBroadcast()
+
+    /**
+     * Crea al `broadcastReceiver` que escuchara despues
+     * y sera llamado con el INTENT
+     */
+    override fun onCreate() {
+        super.onCreate()
+        val intentFilter = IntentFilter(MyReceiverBroadcast.ID_ACTION)
+        registerReceiver(broadcastReceiver, intentFilter)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(broadcastReceiver)
+    }
+
+    override fun onBind(intent: Intent): IBinder? {
+        return super.onBind(intent)
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.i("TheNotificationListener", "Connected");
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         super.onNotificationPosted(sbn)
 
@@ -15,8 +43,20 @@ class TheNotificationListener : NotificationListenerService() {
             Log.i("XXXX", "NOTIFICACION DE YAPE FUE = POSTED.......");
             val message = sbn.notification?.extras?.getString(Notification.EXTRA_TEXT)
             if (!message.isNullOrEmpty() && message.contains("Yape!")) {
-                // Iniciar MainActivity y pasar la URL como extra
-                val intent = Intent("com.anibalcopitan.okeypay2")
+
+                // v1. Iniciar MainActivity y pasar la URL como extra
+//                val intent = Intent("com.anibalcopitan.okeypay2")
+//                intent.putExtra("message", message)
+//                sendBroadcast(intent)
+
+                // v2
+//                val intentFilter = IntentFilter()
+//                intentFilter.addAction("com.anibalcopitan.okeypay2")
+//                registerReceiver(broadcastReceiver, intentFilter)
+
+                // v3
+                // Llamar al BroadcastReceiver para manejar la notificación
+                val intent = Intent(MyReceiverBroadcast.ID_ACTION)
                 intent.putExtra("message", message)
                 sendBroadcast(intent)
             }

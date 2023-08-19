@@ -1,7 +1,9 @@
 package com.anibalcopitan.okeypay2
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.provider.Settings.Global.getString
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -29,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -53,18 +58,49 @@ fun LoginScreenScreenPreview() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(mContext: Context) {
     val openDialog = remember { mutableStateOf(false) }
+    var credentials by remember { mutableStateOf(Credentials()) }
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     Column(modifier = Modifier.padding(16.dp)) {
         HeaderText()
         Spacer(modifier = Modifier.height(28.dp))
-        PhoneNumberTextField()
+        //PhoneNumberTextField()
+        OutlinedTextField(
+            value = credentials.login,
+            onValueChange = { data -> credentials = credentials.copy(login = data) },
+            label = { Text(text = "Celular") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+        )
+        //
         Spacer(modifier = Modifier.height(4.dp))
-        PasswordTextField()
+        //PasswordTextField()
+        OutlinedTextField(
+            value = credentials.pwd,
+            onValueChange = { data -> credentials = credentials.copy(pwd = data) },
+            label = { Text(text = "Contraseña") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+        )
+        //
         Spacer(modifier = Modifier.height(64.dp))
-        ButtonLogin(mContext)
+        ButtonLogin(mContext) {
+            if (!checkCredentials(credentials, context)) {
+                credentials = Credentials()
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
         ButtonToRegister { openDialog.value = true }
     }
@@ -82,6 +118,26 @@ fun LoginScreen(mContext: Context) {
                 RegisterScreen(mContext)
             }
         }
+    }
+}
+
+fun checkCredentials(creds: Credentials, context: Context): Boolean {
+    if (creds.isNotEmpty() && creds.login == "123" && creds.pwd == "123") {
+        context.startActivity(Intent(context, DashboardActivity::class.java))
+        (context as Activity).finish()
+        return true
+    } else {
+        Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
+        return false
+    }
+}
+
+data class Credentials(
+    var login: String = "123",
+    var pwd: String = "123",
+) {
+    fun isNotEmpty(): Boolean {
+        return login.isNotEmpty() && pwd.isNotEmpty()
     }
 }
 
@@ -125,20 +181,17 @@ private fun PasswordTextField() {
 }
 
 @Composable
-private fun ButtonLogin(mContext : Context) {
+private fun ButtonLogin(mContext : Context, onClick: () -> Unit) {
     Button(
-        onClick = {
-            Toast.makeText(mContext, "login success", Toast.LENGTH_SHORT).show()
-        },
+        onClick = onClick,
+//        onClick = {
+//            Toast.makeText(mContext, "login success", Toast.LENGTH_SHORT).show()
+//        },
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(vertical = 16.dp, horizontal = 1.dp),
         shape = Shapes.large
     ) {
         Text("INICIAR SESIÓN")
-    }
-
-    fun showToast(context: Context, message: String) {
-
     }
 }
 
