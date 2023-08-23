@@ -1,10 +1,8 @@
 package com.anibalcopitan.okeypay2
 
 import android.app.Activity
-import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.provider.Settings.Global.getString
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +22,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,11 +40,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.res.TypedArrayUtils.getString
 
 import com.anibalcopitan.okeypay2.ui.theme.Shapes
 import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
-import androidx.compose.ui.window.Dialog as Dialog1
 
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -122,7 +117,7 @@ fun LoginScreen(mContext: Context) {
 }
 
 fun checkCredentials(creds: Credentials, context: Context): Boolean {
-    if (creds.isNotEmpty() && creds.login == "micorreo@example.com" && creds.pwd == "123") {
+    if (creds.isNotEmpty() && creds.login == "pprios@pprios.com" && creds.pwd == "clave123") {
         context.startActivity(Intent(context, DashboardActivity::class.java))
         (context as Activity).finish()
         return true
@@ -133,8 +128,8 @@ fun checkCredentials(creds: Credentials, context: Context): Boolean {
 }
 
 data class Credentials(
-    var login: String = "micorreo@example.com",
-    var pwd: String = "123",
+    var login: String = "pprios@pprios.com",
+    var pwd: String = "clave123",
 ) {
     fun isNotEmpty(): Boolean {
         return login.isNotEmpty() && pwd.isNotEmpty()
@@ -184,9 +179,6 @@ private fun PasswordTextField() {
 private fun ButtonLogin(mContext : Context, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-//        onClick = {
-//            Toast.makeText(mContext, "login success", Toast.LENGTH_SHORT).show()
-//        },
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(vertical = 16.dp, horizontal = 1.dp),
         shape = Shapes.large

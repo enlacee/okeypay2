@@ -1,39 +1,37 @@
 package com.anibalcopitan.okeypay2
 
 import android.content.Context
-import android.content.Intent
-import androidx.compose.foundation.clickable
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import com.anibalcopitan.okeypay2.ui.theme.Shapes
+import com.android.volley.DefaultRetryPolicy
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
 import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
+import com.anibalcopitan.okeypay2.ui.theme.Shapes
+import org.json.JSONObject
 
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -44,21 +42,129 @@ fun RegisterScreenScreenPreview() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(mContext: Context) {
+fun RegisterScreen(context: Context) {
+    var registerData by remember { mutableStateOf(RegisterData()) }
+    var isProcessing by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.padding(16.dp)) {
         HeaderText()
         Spacer(modifier = Modifier.height(18.dp))
-        UsernameTextField()
+        OutlinedTextField(
+            value = registerData.name,
+            onValueChange = { data -> registerData = registerData.copy(name = data) },
+            label = { Text(text = "Nombre") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        EmailTextField()
+        OutlinedTextField(
+            value = registerData.email,
+            onValueChange = { data -> registerData = registerData.copy(email = data) },
+            label = { Text(text = "Correo") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        PasswordTextField()
+        OutlinedTextField(
+            value = registerData.password,
+            onValueChange = { data -> registerData = registerData.copy(password = data) },
+            label = { Text(text = "Crear Contraseña") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
         Spacer(modifier = Modifier.height(24.dp))
-        ButtonRegister(onClick = {
-//            mContext.startActivity(Intent(mContext, RegisterActivity::class.java))
-        })
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (isProcessing) {
+                CircularProgressIndicator()
+
+            } else {
+                ButtonRegister(context) {
+                    if (formValidation(registerData, context)) {
+                        Log.i("BOTON-REGISTRAR", registerData.email)
+                        isProcessing = true
+                        val params: MutableMap<String?, String?> = HashMap()
+                        params["op"] = "register"
+                        params["email"] = registerData.email
+                        params["password"] = registerData.password
+                        params["name"] = registerData.name
+                        val parameters = JSONObject(params as Map<*, *>?)
+                        var url = MainActivity.API_OKEYPAY
+                        val request = JsonObjectRequest(
+                            Request.Method.POST,  // Método POST
+                            url,                 // URL del servidor
+                            parameters,          // Datos JSON a enviar
+                            { response ->
+                                var theResponse = response;
+                                Log.i("BOTON-REGISTRAR", "response OK vollley")
+                                isProcessing = false
+                                // Manejar la respuesta del servidor
+                                if (theResponse.has("message")) {
+                                    Toast.makeText(context, theResponse.getString("message"), Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            },
+                            { error ->
+                                Log.i("BOTON-REGISTRAR", "Error: $error")
+                                Toast.makeText(context, error.toString(), Toast.LENGTH_SHORT).show()
+                                isProcessing = false
+                            }
+                        )
+                        request.retryPolicy = DefaultRetryPolicy(
+                            10000, // 7 segundos espera
+                            DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                            DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+                        )
+
+                        // Agrega la solicitud a la cola de solicitudes de Volley
+                        // Volley.newRequestQueue(context).add(request)
+                        MySingleton.getInstance(context).addToRequestQueue(request)
+
+                        Log.i("BOTON-REGISTRAR", "Enpezo a correr VOLLEY")
+
+                        // Limpiar datos del formulario
+                        // registerData = RegisterData()
+                    }
+                }
+            }
+
+        }
     }
+
+
+
+
+
+}
+
+
+/*
+* validation of form
+* */
+fun formValidation(registerData: RegisterData, context: Context): Boolean {
+    if (registerData.isEmpty()) {
+        Toast.makeText(context, "Llene todos los campos", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    if (!registerData.isEmailValid()) {
+        Toast.makeText(context, "El correo no es válido", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    if (!registerData.isPasswordValid()) {
+        Toast.makeText(context, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    return true
 }
 
 @Composable
@@ -111,7 +217,7 @@ private fun PasswordTextField() {
 }
 
 @Composable
-private fun ButtonRegister(onClick: () -> Unit) {
+private fun ButtonRegister(context : Context, onClick: () -> Unit) {
     Button(
 //        onClick = { /*TODO*/ },
         onClick = onClick,
@@ -120,5 +226,26 @@ private fun ButtonRegister(onClick: () -> Unit) {
         shape = Shapes.large
     ) {
         Text("REGISTRAR")
+    }
+}
+
+
+data class RegisterData(
+    var name: String = "android",
+    var email: String = "android1@pprios.com",
+    var password: String = "123456",
+) {
+    fun isEmpty(): Boolean {
+        return name.isEmpty() && email.isEmpty() && password.isEmpty()
+    }
+
+    fun isEmailValid(): Boolean {
+        var email: String = email
+        val regexPattern = Regex("^\\w+([.-]?\\w+)*@\\w+([.-]?\\w+)*(\\.\\w{2,3})+$")
+        return regexPattern.matches(email)
+    }
+
+    fun isPasswordValid(): Boolean {
+        return password.length >= 6
     }
 }

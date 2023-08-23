@@ -26,6 +26,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val API_BASE_URL: String =
             "https://script.google.com/macros/s/AKfycby8v71PHzEXLlIQnG36JSW_FQgVjGo_tM3GYN6cUx_V9KsnXz1DtT2vB3kOtot4nwA-/exec"
+        const val API_OKEYPAY: String =
+            "https://script.google.com/macros/s/AKfycbx0L7HnvP9eUfgTS2qJ99lkVellTHSVzLSNWCWqN2kBFckjWzNNrtBkVuK6EiQQA3C9Zw/exec"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
