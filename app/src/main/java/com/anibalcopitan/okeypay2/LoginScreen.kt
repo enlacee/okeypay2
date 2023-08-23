@@ -110,11 +110,17 @@ fun LoginScreen(mContext: Context) {
                 color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(size = 0.dp)
             ){
-                RegisterScreen(mContext)
+//                RegisterScreen(mContext)
+                RegisterScreen(mContext, object : DialogCallback {
+                    override fun closeDialog() {
+                        openDialog.value = false
+                    }
+                })
             }
         }
     }
 }
+
 
 fun checkCredentials(creds: Credentials, context: Context): Boolean {
     if (creds.isNotEmpty() && creds.login == "pprios@pprios.com" && creds.pwd == "clave123") {

@@ -38,13 +38,21 @@ import org.json.JSONObject
 @Composable
 fun RegisterScreenScreenPreview() {
     OkeyPay2Theme {
-        RegisterScreen(LocalContext.current)
+//        RegisterScreen(LocalContext.current)
+        RegisterScreen(LocalContext.current, object : DialogCallback {
+            override fun closeDialog() { Log.e("emulate-to-close", "screenPreview" ) }
+        })
     }
+}
+
+
+interface DialogCallback {
+    fun closeDialog()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(context: Context) {
+fun RegisterScreen(context: Context, dialogCallback: DialogCallback) {
     var registerData by remember { mutableStateOf(RegisterData()) }
     var isProcessing by remember { mutableStateOf(false) }
 
@@ -87,6 +95,7 @@ fun RegisterScreen(context: Context) {
 
             } else {
                 ButtonRegister(context) {
+
                     if (formValidation(registerData, context)) {
                         Log.i("BOTON-REGISTRAR", registerData.email)
                         isProcessing = true
@@ -105,10 +114,20 @@ fun RegisterScreen(context: Context) {
                                 var theResponse = response;
                                 Log.i("BOTON-REGISTRAR", "response OK vollley")
                                 isProcessing = false
+
                                 // Manejar la respuesta del servidor
                                 if (theResponse.has("message")) {
                                     Toast.makeText(context, theResponse.getString("message"), Toast.LENGTH_SHORT)
                                         .show()
+                                }
+
+                                // is okey
+                                if (
+                                    theResponse.has("status") &&
+                                    theResponse.getString("status").equals("ok")
+                                ) {
+                                    // Llamar al callback para cerrar el diálogo/modal
+                                    dialogCallback.closeDialog()
                                 }
                             },
                             { error ->
