@@ -3,6 +3,7 @@ package com.anibalcopitan.okeypay2
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -40,26 +42,43 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.android.volley.DefaultRetryPolicy
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
+import com.anibalcopitan.okeypay2.data.appconfig.AppConfigClass
+import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 
 import com.anibalcopitan.okeypay2.ui.theme.Shapes
 import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
+import org.json.JSONObject
 
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LoginScreenScreenPreview() {
     OkeyPay2Theme {
-        LoginScreen(LocalContext.current)
+        LoginScreen()
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(mContext: Context) {
-    val openDialog = remember { mutableStateOf(false) }
-    var credentials by remember { mutableStateOf(Credentials()) }
+fun LoginScreen() {
+    Log.i("BOTON-REGISTRAR", "=== START LoginScreen === " )
     val context = LocalContext.current
+    var sharedPreferencesManager = SharedPreferencesManager(context)
+    val openDialog = remember { mutableStateOf(false) }
+    var credentials by remember { mutableStateOf(
+        Credentials(
+            sharedPreferencesManager.getString(SharedPreferencesManager.KEY_USERNAME, ""),
+            sharedPreferencesManager.getString(SharedPreferencesManager.KEY_PASSWORD, "")
+        )
+    ) }
     val focusManager = LocalFocusManager.current
+    var isProcessing by remember { mutableStateOf(false) }
+
+    Log.i("BOTON-REGISTRAR", "[usernamexxx ] " + sharedPreferencesManager.getString(SharedPreferencesManager.KEY_USERNAME, "") )
+    Log.i("BOTON-REGISTRAR", "[passxxx ] " + sharedPreferencesManager.getString(SharedPreferencesManager.KEY_PASSWORD, "") )
 
     Column(modifier = Modifier.padding(16.dp)) {
         HeaderText()
@@ -91,9 +110,101 @@ fun LoginScreen(mContext: Context) {
         )
         //
         Spacer(modifier = Modifier.height(24.dp))
-        ButtonLogin(mContext) {
-            if (!checkCredentials(credentials, context)) {
-                credentials = Credentials()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (isProcessing) {
+                CircularProgressIndicator()
+            } else {
+                ButtonLogin(context) {
+                    if (formValidation(credentials, context)) {
+                        isProcessing = true
+                        val params: MutableMap<String?, String?> = HashMap()
+                        params["op"] = "login"
+                        params["email"] = credentials.login
+                        params["password"] = credentials.pwd
+                        val parameters = JSONObject(params as Map<*, *>?)
+                        var url = MainActivity.API_OKEYPAY
+                        val request = JsonObjectRequest(
+                            Request.Method.POST,
+                            url,
+                            parameters,
+                            { response ->
+                                var theResponse = response;
+                                Log.i("BOTON-REGISTRAR", "response Login OK vollley")
+
+                                // Manejar la respuesta del servidor
+                                if (theResponse.has("message")) {
+                                    Toast.makeText(context, theResponse.getString("message"), Toast.LENGTH_SHORT).show()
+                                }
+
+                                // is okey
+                                if (
+                                    theResponse.has("status") &&
+                                    theResponse.getString("status").equals("ok") &&
+                                    theResponse.has("data")
+                                ) {
+                                    val dataObject = theResponse.getJSONObject("data")
+                                    // Save Data (prefs)
+                                    val appConfigClass = AppConfigClass.getInstance(context)
+                                    var appConfig = appConfigClass.loadAppConfig()
+                                    appConfig.username = credentials.login
+                                    appConfig.password = credentials.pwd
+                                    appConfig.id = dataObject.get("id")?.toString() ?: ""
+                                    appConfig.name = dataObject.get("name")?.toString() ?: ""
+                                    appConfig.subscriptionStartDate = dataObject.get("subscriptionStartDate")?.toString() ?: ""
+                                    appConfig.subscriptionDurationDays = dataObject.get("subscriptionDurationDays")?.toString() ?: ""
+                                    appConfig.subscriptionPlan = dataObject.get("subscriptionPlan")?.toString() ?: ""
+                                    appConfig.googleSheetUrl = dataObject.get("googleSheetUrl")?.toString() ?: ""
+                                    appConfigClass.saveAppConfig(appConfig)
+                                    Log.i("BOTON-REGISTRAR", "nueva username " + appConfig.username)
+                                    Log.i("BOTON-REGISTRAR", "nueva id " + appConfig.id)
+                                    Log.i("BOTON-REGISTRAR", "nueva URL " + appConfig.googleSheetUrl)
+                                    Log.i("BOTON-REGISTRAR ", "LOGIN: appConfig = " + appConfig.toString())
+                                    // Llamar al callback para cerrar el diálogo/modal
+                                    /*
+                                    * Llamar a los callbacks
+                                    * */
+//                                    onSaveClicked(params["email"].toString(), params["password"].toString())
+//                                    dialogCallback.closeDialog()
+                                    openDashboardActivity(context)
+                                }
+
+                                isProcessing = false
+                            },
+                            { error ->
+                                Log.i("BOTON-REGISTRAR", "Error: $error")
+                                Toast.makeText(context, error.toString(), Toast.LENGTH_SHORT).show()
+                                isProcessing = false
+                            }
+                        )
+                        request.retryPolicy = DefaultRetryPolicy(
+                            10000, // 10 segundos espera
+                            DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                            DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+                        )
+                        MySingleton.getInstance(context).addToRequestQueue(request)
+
+                        // 00. authentication login [consulta api]
+
+                        // 01. Save Data (prefs) (Si falla igual guardar las credenciales ingresadas)
+                        val appConfigClass = AppConfigClass.getInstance(context)
+                        var appConfig = appConfigClass.loadAppConfig()
+                        appConfig.username = credentials.login
+                        appConfig.password = credentials.pwd
+                        appConfigClass.saveAppConfig(appConfig)
+                        Log.i("BOTON-REGISTRAR", "=== ButtonLogin === ")
+                        Log.i("BOTON-REGISTRAR", "CONFIG username " + appConfig.username)
+                        Log.i("BOTON-REGISTRAR", "CONFIG password " + appConfig.password)
+
+                        // 02. abrir activity Dashboard
+//                        openDashboardActivity(context)
+//                        result = true
+                    }
+
+                }
             }
         }
         Spacer(modifier = Modifier.height(44.dp))
@@ -110,36 +221,77 @@ fun LoginScreen(mContext: Context) {
                 color = MaterialTheme.colorScheme.background,
                 shape = RoundedCornerShape(size = 0.dp)
             ){
-//                RegisterScreen(mContext)
-                RegisterScreen(mContext, object : DialogCallback {
-                    override fun closeDialog() {
-                        openDialog.value = false
+                /*
+                * Open Forn Register
+                * */
+                RegisterScreen(
+                    context,
+                    object : DialogCallback {
+                        override fun closeDialog() {
+                            openDialog.value = false
+                            openDashboardActivity(context) // open dashboard FAST
+                        }
+                    },
+                    onSaveClicked = { theUsername, thePassword ->
+                        credentials.login = theUsername
+                        credentials.pwd = thePassword
+                        //Log.d("Formulario1", "Nombre: $nombre, Apellido: $apellido") // Imprimir en la consola
                     }
-                })
+                )
             }
         }
     }
 }
 
-
-fun checkCredentials(creds: Credentials, context: Context): Boolean {
-    if (creds.isNotEmpty() && creds.login == "pprios@pprios.com" && creds.pwd == "clave123") {
-        context.startActivity(Intent(context, DashboardActivity::class.java))
-        (context as Activity).finish()
-        return true
-    } else {
-        Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
-        return false
-    }
+/*
+* Open DashboardActivity
+*
+* return void
+* */
+fun openDashboardActivity(context: Context){
+    context.startActivity(Intent(context, DashboardActivity::class.java))
+    (context as Activity).finish()
 }
 
 data class Credentials(
-    var login: String = "pprios@pprios.com",
-    var pwd: String = "clave123",
+    var login: String = "",
+    var pwd: String = "",
 ) {
-    fun isNotEmpty(): Boolean {
-        return login.isNotEmpty() && pwd.isNotEmpty()
+    fun isEmpty(): Boolean {
+        return login.isEmpty() && pwd.isEmpty()
     }
+
+    fun isEmailValid(): Boolean {
+        var email: String = login
+        val regexPattern = Regex("^\\w+([.-]?\\w+)*@\\w+([.-]?\\w+)*(\\.\\w{2,3})+$")
+        return regexPattern.matches(email)
+    }
+
+    fun isPasswordValid(): Boolean {
+        return pwd.length >= 6
+    }
+}
+
+/*
+* validation of form
+* */
+fun formValidation(credentials: Credentials, context: Context): Boolean {
+    if (credentials.isEmpty()) {
+        Toast.makeText(context, "Llene todos los campos", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    if (!credentials.isEmailValid()) {
+        Toast.makeText(context, "El correo no es válido", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    if (!credentials.isPasswordValid()) {
+        Toast.makeText(context, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+    return true
 }
 
 @Composable

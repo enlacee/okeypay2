@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.sp
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
+import com.anibalcopitan.okeypay2.data.appconfig.AppConfigClass
+import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
 import com.anibalcopitan.okeypay2.ui.theme.Shapes
 import org.json.JSONObject
@@ -38,10 +40,16 @@ import org.json.JSONObject
 @Composable
 fun RegisterScreenScreenPreview() {
     OkeyPay2Theme {
-//        RegisterScreen(LocalContext.current)
-        RegisterScreen(LocalContext.current, object : DialogCallback {
-            override fun closeDialog() { Log.e("emulate-to-close", "screenPreview" ) }
-        })
+        RegisterScreen(
+            LocalContext.current,
+            object : DialogCallback {
+                override fun closeDialog() { }
+            },
+            onSaveClicked = { theUsername, thePassword ->
+                Log.d("theUsername", theUsername) // Imprimir en la consola
+                Log.d("thePassword", thePassword) // Imprimir en la consola
+            }
+        )
     }
 }
 
@@ -52,7 +60,11 @@ interface DialogCallback {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen(context: Context, dialogCallback: DialogCallback) {
+fun RegisterScreen(
+    context: Context,
+    dialogCallback: DialogCallback,
+    onSaveClicked: (String, String) -> Unit
+) {
     var registerData by remember { mutableStateOf(RegisterData()) }
     var isProcessing by remember { mutableStateOf(false) }
 
@@ -97,6 +109,7 @@ fun RegisterScreen(context: Context, dialogCallback: DialogCallback) {
                 ButtonRegister(context) {
 
                     if (formValidation(registerData, context)) {
+                        Log.i("BOTON-REGISTRAR", "==PASO VALIDACION FORM REGISTRO==")
                         Log.i("BOTON-REGISTRAR", registerData.email)
                         isProcessing = true
                         val params: MutableMap<String?, String?> = HashMap()
@@ -104,8 +117,13 @@ fun RegisterScreen(context: Context, dialogCallback: DialogCallback) {
                         params["email"] = registerData.email
                         params["password"] = registerData.password
                         params["name"] = registerData.name
+                        // clear data
+//                        registerData = RegisterData()
+
                         val parameters = JSONObject(params as Map<*, *>?)
                         var url = MainActivity.API_OKEYPAY
+
+
                         val request = JsonObjectRequest(
                             Request.Method.POST,  // Método POST
                             url,                 // URL del servidor
@@ -126,8 +144,50 @@ fun RegisterScreen(context: Context, dialogCallback: DialogCallback) {
                                     theResponse.has("status") &&
                                     theResponse.getString("status").equals("ok")
                                 ) {
+                                    // save data
+                                    // val thedata = theResponse.getJSONArray("data")
+                                    val dataObject = theResponse.getJSONObject("data")
+                                    val id = dataObject.getString("id")
+
+                                    // Save Data (prefs)
+                                    val appConfigClass = AppConfigClass.getInstance(context)
+                                    var appConfig = appConfigClass.loadAppConfig()
+                                    appConfig.username = params["email"].toString()
+                                    appConfig.password = params["password"].toString()
+                                    //
+                                    appConfig.id = dataObject.get("id")?.toString() ?: ""
+                                    appConfig.name = dataObject.get("name")?.toString() ?: ""
+                                    appConfig.subscriptionStartDate = dataObject.get("subscriptionStartDate")?.toString() ?: ""
+                                    appConfig.subscriptionDurationDays = dataObject.get("subscriptionDurationDays")?.toString() ?: ""
+                                    appConfig.subscriptionPlan = dataObject.get("subscriptionPlan")?.toString() ?: ""
+                                    appConfig.googleSheetUrl = dataObject.get("googleSheetUrl")?.toString() ?: ""
+                                    //
+                                    appConfigClass.saveAppConfig(appConfig)
+
+
+                                    //Log.i("BOTON-REGISTRAR", thedata.getString("email"))
+//                                    Log.i("BOTON-REGISTRAR thedata pass", "pass")
+//                                    Log.i("BOTON-REGISTRAR thedata id= ", id)
+//                                    var theemail = params["email"];
+//                                    Log.i("BOTON-REGISTRAR thedata params=email ", theemail.toString())
+//                                    Log.i("BOTON-REGISTRAR ", "REGISTER: appConfig = " + appConfig.toString())
+
+
                                     // Llamar al callback para cerrar el diálogo/modal
+                                    /*
+                                    * Llamar a los callbacks
+                                    * */
+                                    onSaveClicked(params["email"].toString(), params["password"].toString())
                                     dialogCallback.closeDialog()
+
+
+                                    /*
+                                    * - aqui guardar data en temporal android , para usarlo despues
+                                    * en toda la APP
+                                    *
+                                    * - Guardar la contrasenia para usarlo localmente.
+                                    * - SI SE INSTALA ya si necesitaras las credenciales
+                                    * */
                                 }
                             },
                             { error ->
@@ -137,7 +197,7 @@ fun RegisterScreen(context: Context, dialogCallback: DialogCallback) {
                             }
                         )
                         request.retryPolicy = DefaultRetryPolicy(
-                            10000, // 7 segundos espera
+                            20000, // 20 segundos espera
                             DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                             DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
                         )
@@ -250,9 +310,9 @@ private fun ButtonRegister(context : Context, onClick: () -> Unit) {
 
 
 data class RegisterData(
-    var name: String = "android",
-    var email: String = "android1@pprios.com",
-    var password: String = "123456",
+    var name: String = "", // "android"
+    var email: String = "", // android@pprios.com
+    var password: String = "", // android
 ) {
     fun isEmpty(): Boolean {
         return name.isEmpty() && email.isEmpty() && password.isEmpty()

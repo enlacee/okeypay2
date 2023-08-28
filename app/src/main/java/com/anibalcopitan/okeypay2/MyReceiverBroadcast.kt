@@ -6,6 +6,7 @@ import android.content.Intent
 import android.telephony.SmsManager
 import android.util.Log
 import android.widget.Toast
+import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -25,9 +26,15 @@ class MyReceiverBroadcast : BroadcastReceiver() {
     }
 
     private lateinit var notificationUtil: NotificationUtil
+    private lateinit var subscriptionPlan: String
+    private lateinit var sharedPreferencesManager: SharedPreferencesManager
+    private lateinit var urlGoogleSheet: String
 
     override fun onReceive(context: Context, intent: Intent) {
         notificationUtil = NotificationUtil(context)
+        sharedPreferencesManager = SharedPreferencesManager(context)
+        subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
+        urlGoogleSheet = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
 
         if (intent.action == MyReceiverBroadcast.ID_ACTION) {
             val message = intent.getStringExtra("message")
@@ -35,25 +42,42 @@ class MyReceiverBroadcast : BroadcastReceiver() {
                 // task 01: send sms
                 sendMessageToAllNumbersAdded(context, message.toString())
 
-                // task 02: create notification
-                var URLAPI = MainActivity.API_BASE_URL
-                var mensajeEncoded = URLEncoder.encode(message, "UTF-8")
-                var url = URLAPI + "?op=listenersms&mensaje=" + mensajeEncoded
+                // si no tienes subscription 1 no envia REQUEST
+                if (subscriptionPlan == "1" && urlGoogleSheet.isNotEmpty()) {
+                    // task 02: create notification
+                    var URLAPI = MainActivity.API_OKEYPAY
+                    var mensajeEncoded = URLEncoder.encode(message, "UTF-8")
+                    var urlGoogleSheet = URLEncoder.encode(urlGoogleSheet, "UTF-8")
+                    var url =
+                        "$URLAPI?op=listenersms&mensaje=$mensajeEncoded&urlgooglesheet=$urlGoogleSheet"
 
-                val getResquest = StringRequest(
-                    Request.Method.GET,
-                    url,
-                    { response ->
-                        notificationUtil.createSimpleNotification("[insert][ok] " + message.toString())
-                        // createSimpleNotification("[insert][ok] " + message.toString())
-                        // saveErrorToServer("[insert][ok] " + message.toString())
-                    },
-                    { error ->
-                        notificationUtil.createSimpleNotification("[insert][error] " + error.toString())
-                        // saveErrorToServer(error.toString()) // debuging
-                    }
-                )
-                Volley.newRequestQueue(context).add(getResquest)
+                    Log.i("debug", "username= " + sharedPreferencesManager.getString(SharedPreferencesManager.KEY_USERNAME, ""))
+                    Log.i("debug", "urlGoogleSheet= $urlGoogleSheet")
+                    Log.i("debug", "message= $message")
+
+                    val request = StringRequest(
+                        Request.Method.GET,
+                        url,
+                        { response ->
+                            notificationUtil.createSimpleNotification("[insert][ok] " + message.toString())
+                            Log.i("debug", "resqOKk= $message")
+                            // saveErrorToServer("[insert][ok] " + message.toString())
+                        },
+                        { error ->
+                            notificationUtil.createSimpleNotification("[insert][error] " + error.toString())
+                            Log.i("debug", "resqFAIL=")
+                            // saveErrorToServer(error.toString()) // debuging
+                        }
+                    )
+                    request.retryPolicy = DefaultRetryPolicy(
+                        10000, // 10 segundos espera
+                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+                    )
+                    // Volley.newRequestQueue(context).add(request)
+                    request.setShouldCache(false)
+                    MySingleton.getInstance(context).addToRequestQueue(request)
+                }
             }
         }
     }
@@ -64,12 +88,13 @@ class MyReceiverBroadcast : BroadcastReceiver() {
     private fun sendMessageToAllNumbersAdded(context: Context, message: String) {
 
         val sharedPreferencesManager = SharedPreferencesManager(context)
-        val phonesNumbers: Array<String> = sharedPreferencesManager.getPhoneNumbers();
+        var phonesNumbers: Array<String> = sharedPreferencesManager.getPhoneNumbers();
 
         /*
         * Validation if data number is correct
         * */
-        for (phoneNumber in phonesNumbers) {
+        for (originalPhoneNumber in phonesNumbers) {
+            val phoneNumber = originalPhoneNumber.trim().replace(" ", "")
             if (phoneNumber.length >= 9 && phoneNumber.matches(Regex("""\+?\d{9,}"""))) {
                 sendMessage(phoneNumber, message)
             } else {

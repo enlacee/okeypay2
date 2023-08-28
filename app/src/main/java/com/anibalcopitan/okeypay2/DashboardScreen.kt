@@ -49,7 +49,7 @@ fun DashboardScreen(context: Context) {
     Column(modifier = Modifier.padding(16.dp)) {
         HeaderText()
         Spacer(modifier = Modifier.height(18.dp))
-        SubscriptionInfoRow()
+//        SubscriptionInfoRow()
         Spacer(modifier = Modifier.height(8.dp))
         UrlInputRow()
         Spacer(modifier = Modifier.height(18.dp))
@@ -103,33 +103,55 @@ fun SubscriptionInfoRow() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UrlInputRow() {
-    val url = remember {
-        mutableStateOf(TextFieldValue("https://www.ejemplo.com"))
+    val context = LocalContext.current
+    var sharedPreferencesManager = SharedPreferencesManager(context)
+    var subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
+    val gooleSheetUrl = remember {
+        mutableStateOf(TextFieldValue(
+            sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
+        ))
     }
-    val ctx = LocalContext.current
+//    val url = remember {
+//        mutableStateOf(TextFieldValue("https://www.ejemplo.com"))
+//    }
 
+    Text(
+        text = "Codigo: ${sharedPreferencesManager.getString(SharedPreferencesManager.KEY_ID, "")}",
+        fontSize = 16.sp
+    )
+    Text(
+        text = "Correo: ${sharedPreferencesManager.getString(SharedPreferencesManager.KEY_USERNAME, "")}",
+        fontSize = 16.sp
+    )
+    Spacer(modifier = Modifier.height(6.dp))
     // on below line adding a spacer.
     Spacer(modifier = Modifier.height(2.dp))
 
     // on below line adding a button to open URL
-    Button(
-        onClick = {
-        val urlIntent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse(url.value.text)
-        )
-        ctx.startActivity(urlIntent)
-    },
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 1.dp),
-        shape = Shapes.large
+    if (
+        subscriptionPlan == "1" &&
+        gooleSheetUrl.toString().isNotEmpty()
+    ) {
+        Button(
+            onClick = {
+                val urlIntent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(gooleSheetUrl.value.text)
+                )
+                context.startActivity(urlIntent)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(vertical = 16.dp, horizontal = 1.dp),
+            shape = Shapes.large,
+            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)
         ) {
-        // on below line creating a text for our button.
-        Text(
-            text = "Abrir Hoja de Calculo",
-            fontSize = 15.sp
-        )
+            Text(
+                text = "Abrir Hoja de Calculo",
+                fontSize = 15.sp
+            )
+        }
     }
+
 }
 
 // on below line we are creating

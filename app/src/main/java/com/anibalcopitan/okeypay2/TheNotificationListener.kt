@@ -1,12 +1,15 @@
 package com.anibalcopitan.okeypay2
 
 import android.app.Notification
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 
 class TheNotificationListener : NotificationListenerService() {
     private val broadcastReceiver = MyReceiverBroadcast()
@@ -40,10 +43,10 @@ class TheNotificationListener : NotificationListenerService() {
 
         if (sbn.packageName.equals("com.whatsapp")) {
         //if (sbn.packageName.equals("com.bcp.innovacxion.yapeapp")) {
-            Log.i("XXXX", "NOTIFICACION DE YAPE FUE = POSTED.......");
+            Log.i("debug", "== com.whatsapp  Yape! [fuera] == ");
             val message = sbn.notification?.extras?.getString(Notification.EXTRA_TEXT)
             if (!message.isNullOrEmpty() && message.contains("Yape!")) {
-
+                Log.i("debug", " == com.whatsapp  Yape! ==");
                 // v1. Iniciar MainActivity y pasar la URL como extra
 //                val intent = Intent("com.anibalcopitan.okeypay2")
 //                intent.putExtra("message", message)

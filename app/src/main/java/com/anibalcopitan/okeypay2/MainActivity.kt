@@ -19,26 +19,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.anibalcopitan.okeypay2.data.appconfig.AppConfigClass
+import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
 
-
 class MainActivity : ComponentActivity() {
+
     companion object {
         const val API_BASE_URL: String =
             "https://script.google.com/macros/s/AKfycby8v71PHzEXLlIQnG36JSW_FQgVjGo_tM3GYN6cUx_V9KsnXz1DtT2vB3kOtot4nwA-/exec"
         const val API_OKEYPAY: String =
-            "https://script.google.com/macros/s/AKfycbx0L7HnvP9eUfgTS2qJ99lkVellTHSVzLSNWCWqN2kBFckjWzNNrtBkVuK6EiQQA3C9Zw/exec"
+            "https://script.google.com/macros/s/AKfycbx85Avlfjr1PzaS94qK3CcNS_73oHrCevRirl4O_BF6NOh7RUhlCZ7uu07bP1KAY7MK8g/exec"
     }
+//    private var sharedPreferencesManager: SharedPreferencesManager = TODO()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        var sharedPreferencesManager = SharedPreferencesManager(this@MainActivity)
+        Log.i("BOTON-REGISTRAR", " MainActivity.onCreate ")
+
         super.onCreate(savedInstanceState)
+
         setContent {
             OkeyPay2Theme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LoginView()
+                    LoginScreen()
                 }
 
                 // 01. Llamado para solicitar permisos
@@ -65,7 +73,6 @@ class MainActivity : ComponentActivity() {
 
             }
         }
-
 
     }
 
@@ -106,15 +113,10 @@ fun requestNotificationPolicyAccess(context: Context) {
     }
 }
 
-@Composable
-fun LoginView() {
-    LoginScreen(LocalContext.current)
-}
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LoginViewPreview() {
     OkeyPay2Theme {
-        LoginScreen(LocalContext.current)
+        LoginScreen()
     }
 }
