@@ -5,12 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.telephony.SmsManager
 import android.util.Log
-import android.widget.Toast
-import com.android.volley.DefaultRetryPolicy
-import com.android.volley.Request
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
+import com.anibalcopitan.okeypay2.util.HttpUtil
 import java.net.URLEncoder
 
 class MyReceiverBroadcast : BroadcastReceiver() {
@@ -55,28 +51,42 @@ class MyReceiverBroadcast : BroadcastReceiver() {
                     Log.i("debug", "urlGoogleSheet= $urlGoogleSheet")
                     Log.i("debug", "message= $message")
 
-                    val request = StringRequest(
-                        Request.Method.GET,
-                        url,
-                        { response ->
+                    //v3
+                    /*
+                    val client = OkHttpClient()
+                    val request = Requestokhttp3.Builder()
+                        .url(url) // URL de la API que deseas consultar
+                        .build()
+                    client.newCall(request).enqueue(object : Callback {
+                        override fun onFailure(call: Call, e: IOException) {
+                            Log.i("debug", "e=" + e.toString())
+                            // Manejar el error en caso de fallo de la solicitud
+                        }
+
+                        override fun onResponse(call: Call, response: Response) {
+                            if (response.isSuccessful) {
+                                val responseData = response.body?.string()
+                                Log.i("debug", "okok=" + responseData)
+//                                runOnUiThread {
+//                                    // Actualizar la interfaz de usuario con los datos recibidos
+//                                    // responseData contiene la respuesta del servidor en formato String
+//                                }
+                            }
+                        }
+                    })
+                    */
+                    //v4
+                    HttpUtil.sendGetRequest(url,
+                        onResponse = { responseData ->
+                            Log.i("debug", "okok=$responseData")
                             notificationUtil.createSimpleNotification("[insert][ok] " + message.toString())
-                            Log.i("debug", "resqOKk= $message")
-                            // saveErrorToServer("[insert][ok] " + message.toString())
                         },
-                        { error ->
-                            notificationUtil.createSimpleNotification("[insert][error] " + error.toString())
-                            Log.i("debug", "resqFAIL=")
-                            // saveErrorToServer(error.toString()) // debuging
+                        onFailure = { e ->
+                            Log.i("debug", "error=${e.toString()}")
+                            notificationUtil.createSimpleNotification("[insert][error] " + e.toString())
                         }
                     )
-                    request.retryPolicy = DefaultRetryPolicy(
-                        10000, // 10 segundos espera
-                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
-                    )
-                    // Volley.newRequestQueue(context).add(request)
-                    request.setShouldCache(false)
-                    MySingleton.getInstance(context).addToRequestQueue(request)
+
                 }
             }
         }
