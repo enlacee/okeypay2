@@ -7,6 +7,7 @@ class SharedPreferencesManager(context: Context) {
 
     companion object {
         private const val KEY_MY_PREFS = "MyPrefs-SharedPreferencesManager-PhoneNumber"
+
         private const val KEY_PHONE_NUMBER_1 = "phoneNumber1"
         private const val KEY_PHONE_NUMBER_2 = "phoneNumber2"
         private const val KEY_FLAG = "flag"
@@ -20,6 +21,8 @@ class SharedPreferencesManager(context: Context) {
         const val KEY_SUBSCRIPTION_DURATION_DAYS = "subscription_duration_days"
         const val KEY_SUBSCRIPTION_PLAN = "subscription_plan"
         const val KEY_GOOGLE_SHEET_URL = "google_sheet_url"
+
+        const val KEY_TOKEN_INPUT_APK_API_PERU = "token_input_apk_api_peru"
     }
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(KEY_MY_PREFS, Context.MODE_PRIVATE)
 

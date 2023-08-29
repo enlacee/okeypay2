@@ -38,6 +38,11 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
     val formData = sharedPreferencesManager.getFormData()
     var contactNumber1 by remember { mutableStateOf(formData.phoneNumber1) }
     var contactNumber2 by remember { mutableStateOf(formData.phoneNumber2) }
+    var tokenInputApkApiPeru by remember { mutableStateOf(
+        sharedPreferencesManager.getString(SharedPreferencesManager.KEY_TOKEN_INPUT_APK_API_PERU, "")
+    ) }
+
+
     val context = LocalContext.current // Get the current context
 
     /*
@@ -53,6 +58,12 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
             text = "Contactos a notificar por SMS:",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
+        )
+        OutlinedTextField(
+            value = tokenInputApkApiPeru,
+            onValueChange = { tokenInputApkApiPeru = it },
+            label = { Text("Token de integración") },
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -77,6 +88,7 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
         Button(
             onClick = {
                 sharedPreferencesManager.saveFormData(contactNumber1, contactNumber2)
+                sharedPreferencesManager.saveString(SharedPreferencesManager.KEY_TOKEN_INPUT_APK_API_PERU, tokenInputApkApiPeru)
                 Toast.makeText(context, "Datos guardados!", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth(),

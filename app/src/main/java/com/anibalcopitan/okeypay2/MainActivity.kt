@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
             "https://script.google.com/macros/s/AKfycby8v71PHzEXLlIQnG36JSW_FQgVjGo_tM3GYN6cUx_V9KsnXz1DtT2vB3kOtot4nwA-/exec"
         const val API_OKEYPAY: String =
             "https://script.google.com/macros/s/AKfycbx85Avlfjr1PzaS94qK3CcNS_73oHrCevRirl4O_BF6NOh7RUhlCZ7uu07bP1KAY7MK8g/exec"
+        const val API_PERU_URL: String = "https://consulta.api-peru.com/api/yape"
     }
 //    private var sharedPreferencesManager: SharedPreferencesManager = TODO()
 

@@ -7,6 +7,7 @@ import android.telephony.SmsManager
 import android.util.Log
 import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 import com.anibalcopitan.okeypay2.util.HttpUtil
+import okhttp3.FormBody
 import java.net.URLEncoder
 
 class MyReceiverBroadcast : BroadcastReceiver() {
@@ -26,11 +27,14 @@ class MyReceiverBroadcast : BroadcastReceiver() {
     private lateinit var sharedPreferencesManager: SharedPreferencesManager
     private lateinit var urlGoogleSheet: String
 
+    private lateinit var tokenInputAPKApiPeru: String // addition token to send message by whatsapp
+
     override fun onReceive(context: Context, intent: Intent) {
         notificationUtil = NotificationUtil(context)
         sharedPreferencesManager = SharedPreferencesManager(context)
         subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
         urlGoogleSheet = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
+        tokenInputAPKApiPeru = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_TOKEN_INPUT_APK_API_PERU, "")
 
         if (intent.action == MyReceiverBroadcast.ID_ACTION) {
             val message = intent.getStringExtra("message")
@@ -86,6 +90,33 @@ class MyReceiverBroadcast : BroadcastReceiver() {
                             notificationUtil.createSimpleNotification("[insert][error] " + e.toString())
                         }
                     )
+
+                    // Enviar MENSAJE A API-PERU
+                    Log.i("debug", "tokenInputAPKApiPeru = $tokenInputAPKApiPeru")
+                    if (tokenInputAPKApiPeru.isNotEmpty()) {
+                        Log.i("debug", "tokenInputAPKApiPeru = $tokenInputAPKApiPeru")
+                        var theTokenDeInputAPK = tokenInputAPKApiPeru
+                        val headers = mapOf(
+                            "Authorization" to theTokenDeInputAPK,
+                            "Content-Type" to "application/json"
+                        )
+
+                        val requestBody = FormBody.Builder()
+                            .add("type", "YAPE")
+                            .add("msg", message.toString())
+                            .build()
+
+                        HttpUtil.sendPostRequest(MainActivity.API_PERU_URL,
+                            headers = headers,
+                            requestBody = requestBody,
+                            onResponse = { responseData ->
+                                Log.i("debug", "1.Response - apiPeru: $responseData")
+                            },
+                            onFailure = { e ->
+                                Log.e("debug", "Request failed - apiPeru: ${e.message}")
+                            }
+                        )
+                    }
 
                 }
             }
