@@ -8,6 +8,10 @@ import android.util.Log
 import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 import com.anibalcopitan.okeypay2.util.HttpUtil
 import okhttp3.FormBody
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
+import org.json.JSONObject
 import java.net.URLEncoder
 
 class MyReceiverBroadcast : BroadcastReceiver() {
@@ -97,14 +101,27 @@ class MyReceiverBroadcast : BroadcastReceiver() {
                         Log.i("debug", "tokenInputAPKApiPeru = $tokenInputAPKApiPeru")
                         var theTokenDeInputAPK = tokenInputAPKApiPeru
                         val headers = mapOf(
-                            "Authorization" to theTokenDeInputAPK,
+                            "Authorization" to "Bearer " + MainActivity.API_PERU_TOKEN_APP,
                             "Content-Type" to "application/json"
                         )
 
-                        val requestBody = FormBody.Builder()
-                            .add("type", "YAPE")
-                            .add("msg", message.toString())
-                            .build()
+                        // Crear el JSON payload
+                        val jsonPayload = JSONObject().apply {
+                            put("token", tokenInputAPKApiPeru)
+                            put("type", "YAPE")
+                            put("msg", message.toString())
+                        }
+
+                        // Convertir el JSON payload a RequestBody
+                        val requestBody = RequestBody.create(
+                            "application/json; charset=utf-8".toMediaTypeOrNull(),
+                            jsonPayload.toString()
+                        )
+//                        val requestBody = FormBody.Builder()
+//                            .add("token", tokenInputAPKApiPeru)
+//                            .add("type", "YAPE")
+//                            .add("msg", message.toString())
+//                            .build()
 
                         HttpUtil.sendPostRequest(MainActivity.API_PERU_URL,
                             headers = headers,
