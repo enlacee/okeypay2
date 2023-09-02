@@ -8,6 +8,7 @@ import android.util.Log
 import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 import com.anibalcopitan.okeypay2.util.HttpUtil
 import java.net.URLEncoder
+import kotlin.properties.Delegates
 
 class MyReceiverBroadcast : BroadcastReceiver() {
 
@@ -25,16 +26,23 @@ class MyReceiverBroadcast : BroadcastReceiver() {
     private lateinit var subscriptionPlan: String
     private lateinit var sharedPreferencesManager: SharedPreferencesManager
     private lateinit var urlGoogleSheet: String
-
+    private lateinit var counter: String
+    private var counterAsInt by Delegates.notNull<Int>()
     override fun onReceive(context: Context, intent: Intent) {
         notificationUtil = NotificationUtil(context)
         sharedPreferencesManager = SharedPreferencesManager(context)
         subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
         urlGoogleSheet = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
+        counter = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_COUNTER, "")
+        counterAsInt = if (!counter.isNullOrBlank()) counter.toInt() else 0
 
         if (intent.action == MyReceiverBroadcast.ID_ACTION) {
             val message = intent.getStringExtra("message")
             if ( !message.isNullOrEmpty() ) {
+                // save counter
+                counterAsInt += 1
+                sharedPreferencesManager.saveString(SharedPreferencesManager.KEY_COUNTER, counterAsInt.toString())
+
                 // task 01: send sms
                 sendMessageToAllNumbersAdded(context, message.toString())
 

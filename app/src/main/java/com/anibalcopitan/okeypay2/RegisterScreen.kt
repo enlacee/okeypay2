@@ -250,7 +250,7 @@ fun formValidation(registerData: RegisterData, context: Context): Boolean {
 private fun HeaderText() {
 //    Text(text = "Bienvenid@,", fontWeight = FontWeight.Bold, fontSize = 32.sp)
 //    Spacer(modifier = Modifier.height(2.dp))
-    Text(text = "Regístrese para crear una cuenta", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.LightGray)
+    Text(text = "Regístrese para crear una cuenta", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

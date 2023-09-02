@@ -50,8 +50,8 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
 
     Column {
         Text(
-            text = "Contactos a notificar por SMS:",
-            fontSize = 18.sp,
+            text = "Contactos a notificar mediante SMS",
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -145,9 +145,6 @@ fun buttonTest(sharedPreferencesManager: SharedPreferencesManager) {
 * Call to broadcast task (notification)
 * */
 fun realizeOperationX(context: Context, message: String) {
-    // val intent = Intent(context, MyReceiverBroadcast::class.java)
-    // context.sendBroadcast(intent)
-
     val intent = Intent(MyReceiverBroadcast.ID_ACTION)
     intent.putExtra(MyReceiverBroadcast.KEY_NAME_MESSAGE, message)
     context.sendBroadcast(intent)

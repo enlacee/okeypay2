@@ -31,6 +31,7 @@ import com.anibalcopitan.okeypay2.data.phonenumberregistration.PhoneNumberRegist
 import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
 import com.anibalcopitan.okeypay2.ui.theme.OkeyPay2Theme
 import com.anibalcopitan.okeypay2.ui.theme.Shapes
+import com.google.android.material.textfield.TextInputLayout.LengthCounter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,80 +41,32 @@ import java.util.Locale
 @Composable
 fun DashboardScreenScreenPreview() {
     OkeyPay2Theme {
-        DashboardScreen(LocalContext.current)
+        DashboardScreen(0)
     }
 }
 
 @Composable
-fun DashboardScreen(context: Context) {
+fun DashboardScreen(counter: Int) {
+    val context = LocalContext.current
     Column(modifier = Modifier.padding(16.dp)) {
         HeaderText()
-        Spacer(modifier = Modifier.height(18.dp))
-//        SubscriptionInfoRow()
-        Spacer(modifier = Modifier.height(8.dp))
-        UrlInputRow()
-        Spacer(modifier = Modifier.height(18.dp))
-
+        Spacer(modifier = Modifier.height(16.dp))
+        inputHeader(counter)
+        Spacer(modifier = Modifier.height(16.dp))
         // Save PhoneNumber
         val sharedPreferencesManager = SharedPreferencesManager(context)
         PhoneNumberRegistrationForm(sharedPreferencesManager)
+
+        Spacer(modifier = Modifier.height(16.dp))
+        inputSpreadSheet()
     }
 }
-
-@Composable
-fun SubscriptionInfoRow() {
-    val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    val startDate = dateFormatter.parse("2023-08-15")?.time ?: System.currentTimeMillis()
-    val endDate = dateFormatter.parse("2023-08-25")?.time ?: startDate + (10 * 24 * 60 * 60 * 1000) // Fecha de fin: 10 días después del inicio
-    var daysRemaining by remember { mutableIntStateOf(3) }
-
-    // Calculate days remaining based on current date and end date
-    LaunchedEffect(endDate) {
-        val currentTime = System.currentTimeMillis()
-        val days = ((endDate - currentTime) / (24 * 60 * 60 * 1000)).toInt()
-        daysRemaining = if (days >= 0) days else 0
-    }
-
-    Column {
-        Row {
-            Text(
-                text = "Días restantes de suscripción: ",
-                fontSize = 18.sp,
-
-            )
-            Text(
-                text = "$daysRemaining días",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-        }
-
-        Text(
-            text = "Fecha de inicio: ${SimpleDateFormat("dd/MM/yyyy").format(Date(startDate))}",
-            fontSize = 16.sp
-        )
-        Text(
-            text = "Fecha de fin: ${SimpleDateFormat("dd/MM/yyyy").format(Date(endDate))}",
-            fontSize = 16.sp
-        )
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UrlInputRow() {
+fun inputHeader(counter: Int) {
     val context = LocalContext.current
     var sharedPreferencesManager = SharedPreferencesManager(context)
-    var subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
-    val gooleSheetUrl = remember {
-        mutableStateOf(TextFieldValue(
-            sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
-        ))
-    }
-//    val url = remember {
-//        mutableStateOf(TextFieldValue("https://www.ejemplo.com"))
-//    }
 
     Text(
         text = "Codigo: ${sharedPreferencesManager.getString(SharedPreferencesManager.KEY_ID, "")}",
@@ -123,9 +76,24 @@ fun UrlInputRow() {
         text = "Correo: ${sharedPreferencesManager.getString(SharedPreferencesManager.KEY_USERNAME, "")}",
         fontSize = 16.sp
     )
-    Spacer(modifier = Modifier.height(6.dp))
-    // on below line adding a spacer.
-    Spacer(modifier = Modifier.height(2.dp))
+
+    Text(
+        text = "Transacciones:" + counter.toString(),
+        fontSize = 16.sp
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun inputSpreadSheet() {
+    val context = LocalContext.current
+    var sharedPreferencesManager = SharedPreferencesManager(context)
+    var subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
+    val gooleSheetUrl = remember {
+        mutableStateOf(TextFieldValue(
+            sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
+        ))
+    }
 
     // on below line adding a button to open URL
     if (
@@ -168,7 +136,7 @@ fun ContactNumbersRow() {
 
     Column {
         Text(
-            text = "Contactos a notificar por SMS:",
+            text = "Opcional: contactos a notificar mediante SMS",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
