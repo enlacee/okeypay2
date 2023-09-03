@@ -1,11 +1,14 @@
 package com.anibalcopitan.okeypay2
 
+import android.app.AlertDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.SmsManager
 import android.util.Log
+import android.widget.Toast
 import com.anibalcopitan.okeypay2.data.phonenumberregistration.SharedPreferencesManager
+import com.anibalcopitan.okeypay2.data.phonenumberregistration.realizeOperationX
 import com.anibalcopitan.okeypay2.util.HttpUtil
 import java.net.URLEncoder
 import kotlin.properties.Delegates
@@ -16,9 +19,8 @@ class MyReceiverBroadcast : BroadcastReceiver() {
     * Ref: https://developer.android.com/guide/components/broadcasts#kotlin
     * */
     companion object {
-//        const val ID_ACTION: String = "com.anibalcopitan.okeypay2.broadcast.SEND_DATA_NOTIFICATION"
-//        const val ID_ACTION_CLEAR_DATA: String = "com.anibalcopitan.okeypay2.broadcast.CLEAR_DATA"
         const val ID_ACTION: String = "com.anibalcopitan.okeypay2.broadcast.SEND_DATA_NOTIFICATION"
+        const val ID_SHOW_DIALOG: String = "com.anibalcopitan.okeypay2.broadcast.SHOW_DIALOG"
         const val KEY_NAME_MESSAGE: String = "message"
     }
 
@@ -26,25 +28,28 @@ class MyReceiverBroadcast : BroadcastReceiver() {
     private lateinit var subscriptionPlan: String
     private lateinit var sharedPreferencesManager: SharedPreferencesManager
     private lateinit var urlGoogleSheet: String
-    private lateinit var counter: String
-    private var counterAsInt by Delegates.notNull<Int>()
+
     override fun onReceive(context: Context, intent: Intent) {
         notificationUtil = NotificationUtil(context)
         sharedPreferencesManager = SharedPreferencesManager(context)
         subscriptionPlan = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_SUBSCRIPTION_PLAN, "")
         urlGoogleSheet = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_GOOGLE_SHEET_URL, "")
-        counter = sharedPreferencesManager.getString(SharedPreferencesManager.KEY_COUNTER, "")
-        counterAsInt = if (!counter.isNullOrBlank()) counter.toInt() else 0
 
         if (intent.action == MyReceiverBroadcast.ID_ACTION) {
             val message = intent.getStringExtra("message")
             if ( !message.isNullOrEmpty() ) {
-                // save counter
-                counterAsInt += 1
-                sharedPreferencesManager.saveString(SharedPreferencesManager.KEY_COUNTER, counterAsInt.toString())
-
                 // task 01: send sms
                 sendMessageToAllNumbersAdded(context, message.toString())
+
+                // counter
+                sharedPreferencesManager.setCounter(sharedPreferencesManager.getCounter() + 1)
+                if (subscriptionPlan == "0" && sharedPreferencesManager.getCounter() > 10) {
+                    // Emitir un broadcast que la actividad de Compose escuchará
+                    val broadcastIntent = Intent(MyReceiverBroadcast.ID_SHOW_DIALOG)
+                    context?.sendBroadcast(broadcastIntent)
+                    // no seguir con el codigo de registro en Excel
+                    return
+                }
 
                 // si no tienes subscription 1 no envia REQUEST
                 if (subscriptionPlan == "1" && urlGoogleSheet.isNotEmpty()) {

@@ -48,13 +48,16 @@ fun DashboardScreenScreenPreview() {
 @Composable
 fun DashboardScreen(counter: Int) {
     val context = LocalContext.current
+    val sharedPreferencesManager = SharedPreferencesManager(context)
+
     Column(modifier = Modifier.padding(16.dp)) {
-        HeaderText()
+        mainHeader()
         Spacer(modifier = Modifier.height(16.dp))
-        inputHeader(counter)
+
+        inputHeaderText(sharedPreferencesManager)
         Spacer(modifier = Modifier.height(16.dp))
+
         // Save PhoneNumber
-        val sharedPreferencesManager = SharedPreferencesManager(context)
         PhoneNumberRegistrationForm(sharedPreferencesManager)
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -64,9 +67,7 @@ fun DashboardScreen(counter: Int) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun inputHeader(counter: Int) {
-    val context = LocalContext.current
-    var sharedPreferencesManager = SharedPreferencesManager(context)
+fun inputHeaderText(sharedPreferencesManager: SharedPreferencesManager) {
 
     Text(
         text = "Codigo: ${sharedPreferencesManager.getString(SharedPreferencesManager.KEY_ID, "")}",
@@ -78,7 +79,7 @@ fun inputHeader(counter: Int) {
     )
 
     Text(
-        text = "Transacciones:" + counter.toString(),
+        text = "Transacciones: " + sharedPreferencesManager.getCounter(),
         fontSize = 16.sp
     )
 }
@@ -172,7 +173,7 @@ fun ContactNumbersRow() {
 }
 
 @Composable
-private fun HeaderText() {
+private fun mainHeader() {
     Text(text = stringResource(id = R.string.app_name), fontWeight = FontWeight.Bold, fontSize = 32.sp)
     Spacer(modifier = Modifier.height(2.dp))
 }
