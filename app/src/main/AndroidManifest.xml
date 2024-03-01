@@ -10,7 +10,9 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
-    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <!-- Add these lines for SMS permissions -->
+    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
 
     <application
         android:allowBackup="true"

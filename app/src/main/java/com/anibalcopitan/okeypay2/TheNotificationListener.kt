@@ -41,8 +41,8 @@ class TheNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         super.onNotificationPosted(sbn)
 
-        if (sbn.packageName.equals("com.whatsapp")) {
-        //if (sbn.packageName.equals("com.bcp.innovacxion.yapeapp")) {
+        //if (sbn.packageName.equals("com.whatsapp")) {
+        if (sbn.packageName.equals("com.bcp.innovacxion.yapeapp")) {
             Log.i("debug", "== com.whatsapp  Yape! [fuera] == ");
             val message = sbn.notification?.extras?.getString(Notification.EXTRA_TEXT)
             if (!message.isNullOrEmpty() && message.contains("Yape!")) {

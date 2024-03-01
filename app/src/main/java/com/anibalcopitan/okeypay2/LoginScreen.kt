@@ -298,7 +298,7 @@ fun formValidation(credentials: Credentials, context: Context): Boolean {
 private fun HeaderText() {
     Text(text = stringResource(id = R.string.app_name), fontWeight = FontWeight.Bold, fontSize = 32.sp)
     Spacer(modifier = Modifier.height(2.dp))
-    Text(text = "Inicia sesión para continuar", fontWeight = FontWeight.Bold, fontSize = 26.sp, color = Color.LightGray)
+    Text(text = "Inicia sesión para continuar", fontWeight = FontWeight.Bold, fontSize = 26.sp)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
