@@ -39,7 +39,7 @@ class MyReceiverBroadcast : BroadcastReceiver() {
             val message = intent.getStringExtra("message")
             if ( !message.isNullOrEmpty() ) {
                 // task 01: send sms
-                sendMessageToAllNumbersAdded(context, message.toString())
+                // sendMessageToAllNumbersAdded(context, message.toString())
 
                 // counter
                 sharedPreferencesManager.setCounter(sharedPreferencesManager.getCounter() + 1)

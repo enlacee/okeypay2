@@ -44,11 +44,12 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
     * Validation input phone
     * */
     fun isValidNumber(number: String): Boolean {
-//        return false
+        // return false
         return number.length > 8 && number.length <= 12
     }
 
     Column {
+        /*
         Text(
             text = "Contactos a notificar mediante SMS",
             fontSize = 14.sp,
@@ -59,8 +60,6 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
             value = contactNumber1,
             onValueChange = { contactNumber1 = it },
             label = { Text("Celular 1") },
-//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-//            isError = !isValidNumber(contactNumber1),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -68,8 +67,6 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
             value = contactNumber2,
             onValueChange = { contactNumber2 = it },
             label = { Text("Celular 2") },
-//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-//            isError = !isValidNumber(contactNumber2),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -88,6 +85,7 @@ fun PhoneNumberRegistrationForm(sharedPreferencesManager: SharedPreferencesManag
 
         // Adding Button test
         Spacer(modifier = Modifier.height(18.dp))
+        */
         buttonTest(sharedPreferencesManager)
     }
 }
@@ -99,10 +97,14 @@ fun buttonTest(sharedPreferencesManager: SharedPreferencesManager) {
     var flag by remember { mutableStateOf(formData.flag) }
     val context = LocalContext.current // Get the current context
 
-    //if (true) {
     if (flag) {
         Button(
             onClick = {
+
+            /**
+             * Comentando permissos de SMS v10
+             */
+            /*
                 // 01. pedir permisos de SMS
                 if (ContextCompat.checkSelfPermission(
                         context as Activity,
@@ -118,6 +120,7 @@ fun buttonTest(sharedPreferencesManager: SharedPreferencesManager) {
                         1123456789
                     )
                 }
+            */
 
                 // 02. show modal
                 val alertDialogBuilder = android.app.AlertDialog.Builder(context)
